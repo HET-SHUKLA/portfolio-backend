@@ -17,11 +17,10 @@ I would chose Fastify over Express because,
 2. More structured and has natural schema validation (No need for zod or any other validator)
 3. Slightly better performance
 
-
 ## Decision
 
 Decided to use Fastify.
 
 ## Consequences
 
-I can not think of any consequence for this decision.
+Other frameworks are faster than Fastify, But using fastify because I already know it. Which can add much more time during cold start.
