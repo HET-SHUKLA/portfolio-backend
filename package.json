@@ -25,11 +25,11 @@
   },
   "dependencies": {
     "@fastify/aws-lambda": "^6.4.1",
+    "esbuild": "^0.28.1",
     "fastify": "^5.11.2"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.162",
-    "@types/node": "^26.1.2",
-    "esbuild": "^0.28.1"
+    "@types/node": "^26.1.2"
   }
 }
