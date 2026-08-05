@@ -18,7 +18,10 @@
     "doc": "docs"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "node server.ts",
+    "typecheck": "tsc --noEmit",
+    "sam:build": "sam build",
+    "sam:deploy": "sam deploy"
   },
   "dependencies": {
     "@fastify/aws-lambda": "^6.4.1",
