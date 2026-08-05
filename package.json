@@ -1,0 +1,26 @@
+{
+  "name": "portfolio-backend",
+  "version": "1.0.0",
+  "description": "API for Portfolio website",
+  "homepage": "https://github.com/HET-SHUKLA/portfolio-backend#readme",
+  "bugs": {
+    "url": "https://github.com/HET-SHUKLA/portfolio-backend/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/HET-SHUKLA/portfolio-backend.git"
+  },
+  "license": "ISC",
+  "author": "Het Shukla <contact@hetshukla.com>",
+  "type": "module",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "fastify": "^5.11.2"
+  }
+}
