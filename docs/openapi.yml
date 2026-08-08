@@ -1,0 +1,1598 @@
+openapi: 3.1.0
+
+info:
+  title: Portfolio Backend API
+  version: 1.0.0
+  description: |
+    Production API for the portfolio application.
+
+    The public API provides portfolio content and synchronization information.
+    The administrative API provides authenticated CRUD operations for managing
+    portfolio content.
+
+servers:
+  - url: https://api.example.com/api/v1
+    description: Production
+
+tags:
+  - name: Public
+    description: Public portfolio APIs
+  - name: Admin
+    description: Administrative portfolio APIs
+
+paths:
+
+  # ============================================================
+  # PUBLIC API
+  # ============================================================
+
+  /version:
+    get:
+      tags:
+        - Public
+      summary: Get current portfolio version
+      description: |
+        Returns the current portfolio content version.
+
+        The frontend compares this value with the version embedded in the
+        static frontend. If the versions differ, the frontend requests
+        the complete portfolio from /portfolio.
+
+        This endpoint is intended to be cached by the CDN.
+
+      operationId: getVersion
+
+      responses:
+        "200":
+          description: Portfolio version retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VersionResponse"
+              example:
+                status: SUCCESS
+                code: 200
+                message: Version retrieved successfully
+                data:
+                  version: 17
+
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+
+  /portfolio:
+    get:
+      tags:
+        - Public
+      summary: Get complete portfolio
+      description: |
+        Returns the complete public portfolio snapshot.
+
+        The frontend should request this endpoint only when its locally
+        embedded portfolio version differs from the backend version.
+
+      operationId: getPortfolio
+
+      responses:
+        "200":
+          description: Complete portfolio retrieved successfully
+          headers:
+            ETag:
+              description: Entity tag representing this portfolio representation.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PortfolioResponse"
+
+        "304":
+          description: |
+            The portfolio has not changed.
+
+            The server returns 304 when the client's cached representation
+            is still valid. A 304 response does not contain a response body.
+          headers:
+            ETag:
+              description: Entity tag representing the current portfolio.
+              schema:
+                type: string
+
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+
+  /experience:
+    get:
+      tags:
+        - Public
+      summary: Get all work experience
+      operationId: getExperience
+
+      responses:
+        "200":
+          description: Experience retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExperienceListResponse"
+
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+
+  /projects:
+    get:
+      tags:
+        - Public
+      summary: Get all projects
+      operationId: getProjects
+
+      responses:
+        "200":
+          description: Projects retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProjectListResponse"
+
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+
+  /skills:
+    get:
+      tags:
+        - Public
+      summary: Get skills
+      operationId: getSkills
+
+      responses:
+        "200":
+          description: Skills retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SkillsResponse"
+
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+
+  /userData:
+    get:
+      tags:
+        - Public
+      summary: Get user profile data
+      operationId: getUserData
+
+      responses:
+        "200":
+          description: User data retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserDataResponse"
+
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+
+  /contact:
+    get:
+      tags:
+        - Public
+      summary: Get contact information
+      operationId: getContact
+
+      responses:
+        "200":
+          description: Contact information retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContactResponse"
+
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+
+  /navbar:
+    get:
+      tags:
+        - Public
+      summary: Get navigation data
+      operationId: getNavbar
+
+      responses:
+        "200":
+          description: Navigation data retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NavbarResponse"
+
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+
+  # ============================================================
+  # ADMIN - EXPERIENCE
+  # ============================================================
+
+  /admin/experience:
+    post:
+      tags:
+        - Admin
+      summary: Create work experience
+      operationId: createExperience
+      security:
+        - AdminBearerAuth: []
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ExperienceInput"
+
+      responses:
+        "201":
+          description: Experience created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExperienceResponse"
+
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+
+  /admin/experience/{id}:
+    parameters:
+      - $ref: "#/components/parameters/ResourceId"
+
+    patch:
+      tags:
+        - Admin
+      summary: Update work experience
+      operationId: updateExperience
+      security:
+        - AdminBearerAuth: []
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ExperienceInput"
+
+      responses:
+        "200":
+          description: Experience updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExperienceResponse"
+
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+
+    delete:
+      tags:
+        - Admin
+      summary: Delete work experience
+      operationId: deleteExperience
+      security:
+        - AdminBearerAuth: []
+
+      responses:
+        "200":
+          $ref: "#/components/responses/DeleteSuccess"
+
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+
+  # ============================================================
+  # ADMIN - PROJECTS
+  # ============================================================
+
+  /admin/projects:
+    post:
+      tags:
+        - Admin
+      summary: Create project
+      operationId: createProject
+      security:
+        - AdminBearerAuth: []
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProjectInput"
+
+      responses:
+        "201":
+          description: Project created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProjectResponse"
+
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+
+  /admin/projects/{id}:
+    parameters:
+      - $ref: "#/components/parameters/ResourceId"
+
+    patch:
+      tags:
+        - Admin
+      summary: Update project
+      operationId: updateProject
+      security:
+        - AdminBearerAuth: []
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProjectInput"
+
+      responses:
+        "200":
+          description: Project updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProjectResponse"
+
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+
+    delete:
+      tags:
+        - Admin
+      summary: Delete project
+      operationId: deleteProject
+      security:
+        - AdminBearerAuth: []
+
+      responses:
+        "200":
+          $ref: "#/components/responses/DeleteSuccess"
+
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+
+  # ============================================================
+  # ADMIN - SKILLS
+  # ============================================================
+
+  /admin/skills:
+    post:
+      tags:
+        - Admin
+      summary: Create skills
+      operationId: createSkills
+      security:
+        - AdminBearerAuth: []
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SkillsInput"
+
+      responses:
+        "201":
+          description: Skills created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SkillsResponse"
+
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+        "409":
+          $ref: "#/components/responses/Conflict"
+
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+
+    patch:
+      tags:
+        - Admin
+      summary: Update skills
+      operationId: updateSkills
+      security:
+        - AdminBearerAuth: []
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SkillsInput"
+
+      responses:
+        "200":
+          description: Skills updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SkillsResponse"
+
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+
+    delete:
+      tags:
+        - Admin
+      summary: Delete skills
+      operationId: deleteSkills
+      security:
+        - AdminBearerAuth: []
+
+      responses:
+        "200":
+          $ref: "#/components/responses/DeleteSuccess"
+
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+
+  # ============================================================
+  # ADMIN - USER DATA
+  # ============================================================
+
+  /admin/userData:
+    post:
+      tags:
+        - Admin
+      summary: Create user data
+      operationId: createUserData
+      security:
+        - AdminBearerAuth: []
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserDataInput"
+
+      responses:
+        "201":
+          description: User data created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserDataResponse"
+
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+        "409":
+          $ref: "#/components/responses/Conflict"
+
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+
+    patch:
+      tags:
+        - Admin
+      summary: Update user data
+      operationId: updateUserData
+      security:
+        - AdminBearerAuth: []
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserDataInput"
+
+      responses:
+        "200":
+          description: User data updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserDataResponse"
+
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+
+    delete:
+      tags:
+        - Admin
+      summary: Delete user data
+      operationId: deleteUserData
+      security:
+        - AdminBearerAuth: []
+
+      responses:
+        "200":
+          $ref: "#/components/responses/DeleteSuccess"
+
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+
+  # ============================================================
+  # ADMIN - CONTACT
+  # ============================================================
+
+  /admin/contact:
+    post:
+      tags:
+        - Admin
+      summary: Create contact information
+      operationId: createContact
+      security:
+        - AdminBearerAuth: []
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ContactInput"
+
+      responses:
+        "201":
+          description: Contact information created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContactResponse"
+
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+        "409":
+          $ref: "#/components/responses/Conflict"
+
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+
+    patch:
+      tags:
+        - Admin
+      summary: Update contact information
+      operationId: updateContact
+      security:
+        - AdminBearerAuth: []
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ContactInput"
+
+      responses:
+        "200":
+          description: Contact information updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContactResponse"
+
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+
+    delete:
+      tags:
+        - Admin
+      summary: Delete contact information
+      operationId: deleteContact
+      security:
+        - AdminBearerAuth: []
+
+      responses:
+        "200":
+          $ref: "#/components/responses/DeleteSuccess"
+
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+
+  # ============================================================
+  # ADMIN - NAVBAR
+  # ============================================================
+
+  /admin/navbar:
+    post:
+      tags:
+        - Admin
+      summary: Create navigation data
+      operationId: createNavbar
+      security:
+        - AdminBearerAuth: []
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NavbarInput"
+
+      responses:
+        "201":
+          description: Navigation data created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NavbarResponse"
+
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+        "409":
+          $ref: "#/components/responses/Conflict"
+
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+
+    patch:
+      tags:
+        - Admin
+      summary: Update navigation data
+      operationId: updateNavbar
+      security:
+        - AdminBearerAuth: []
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NavbarInput"
+
+      responses:
+        "200":
+          description: Navigation data updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NavbarResponse"
+
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+
+    delete:
+      tags:
+        - Admin
+      summary: Delete navigation data
+      operationId: deleteNavbar
+      security:
+        - AdminBearerAuth: []
+
+      responses:
+        "200":
+          $ref: "#/components/responses/DeleteSuccess"
+
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+
+# ==============================================================
+# COMPONENTS
+# ==============================================================
+
+components:
+
+  # ------------------------------------------------------------
+  # SECURITY
+  # ------------------------------------------------------------
+
+  securitySchemes:
+
+    AdminBearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: opaque-token
+      description: |
+        Temporary administrative bearer token.
+
+        The token must be provided using:
+
+        Authorization: Bearer <admin-token>
+
+
+  # ------------------------------------------------------------
+  # PARAMETERS
+  # ------------------------------------------------------------
+
+  parameters:
+
+    ResourceId:
+      name: id
+      in: path
+      required: true
+      description: Unique identifier of the resource.
+      schema:
+        type: integer
+        minimum: 1
+
+
+  # ------------------------------------------------------------
+  # COMMON ENUMS
+  # ------------------------------------------------------------
+
+  schemas:
+
+    Status:
+      type: string
+      enum:
+        - SUCCESS
+        - FAILURE
+
+
+  # ------------------------------------------------------------
+  # NAVBAR
+  # ------------------------------------------------------------
+
+    NavbarItem:
+      type: object
+      required:
+        - title
+        - link
+      properties:
+        title:
+          type: string
+        link:
+          type: string
+
+
+    NavbarInput:
+      type: object
+      required:
+        - left
+        - right
+      properties:
+        left:
+          type: array
+          items:
+            $ref: "#/components/schemas/NavbarItem"
+
+        right:
+          type: array
+          items:
+            $ref: "#/components/schemas/NavbarItem"
+
+
+  # ------------------------------------------------------------
+  # USER DATA
+  # ------------------------------------------------------------
+
+    UserDataInput:
+      type: object
+      required:
+        - name
+        - role
+        - description
+        - customData
+      properties:
+        name:
+          type: string
+
+        role:
+          type: string
+
+        description:
+          type: array
+          items:
+            type: string
+
+        customData:
+          type:
+            - array
+            - "null"
+          items:
+            type: string
+
+
+  # ------------------------------------------------------------
+  # EXPERIENCE
+  # ------------------------------------------------------------
+
+    ExperienceInput:
+      type: object
+      required:
+        - startDate
+        - endDate
+        - role
+        - company
+        - location
+        - description
+        - customData
+      properties:
+        startDate:
+          type: string
+          format: date
+
+        endDate:
+          type:
+            - string
+            - "null"
+          format: date
+
+        role:
+          type: string
+
+        company:
+          type:
+            - string
+            - "null"
+
+        location:
+          type:
+            - string
+            - "null"
+
+        description:
+          type: array
+          items:
+            type: string
+
+        customData:
+          type:
+            - array
+            - "null"
+          items:
+            type: string
+
+
+    Experience:
+      allOf:
+        - $ref: "#/components/schemas/ExperienceInput"
+        - type: object
+          required:
+            - id
+          properties:
+            id:
+              type: integer
+              minimum: 1
+
+
+  # ------------------------------------------------------------
+  # PROJECTS
+  # ------------------------------------------------------------
+
+    ProjectInput:
+      type: object
+      required:
+        - name
+        - code
+        - live
+        - description
+        - images
+        - tools
+        - technologies
+        - languages
+        - customData
+      properties:
+        name:
+          type: string
+
+        code:
+          type:
+            - string
+            - "null"
+
+        live:
+          type:
+            - string
+            - "null"
+
+        description:
+          type: array
+          items:
+            type: string
+
+        images:
+          type:
+            - array
+            - "null"
+          items:
+            type: string
+
+        tools:
+          type:
+            - array
+            - "null"
+          items:
+            type: string
+
+        technologies:
+          type:
+            - array
+            - "null"
+          items:
+            type: string
+
+        languages:
+          type:
+            - array
+            - "null"
+          items:
+            type: string
+
+        customData:
+          type:
+            - array
+            - "null"
+          items:
+            type: string
+
+
+    Project:
+      allOf:
+        - $ref: "#/components/schemas/ProjectInput"
+        - type: object
+          required:
+            - id
+          properties:
+            id:
+              type: integer
+              minimum: 1
+
+
+  # ------------------------------------------------------------
+  # SKILLS
+  # ------------------------------------------------------------
+
+    SkillsInput:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: array
+          items:
+            type: string
+
+
+  # ------------------------------------------------------------
+  # CONTACT
+  # ------------------------------------------------------------
+
+    ContactSocial:
+      type: object
+      required:
+        - name
+        - link
+      properties:
+        name:
+          type: string
+
+        link:
+          type: string
+
+
+    ContactInput:
+      type: object
+      required:
+        - email
+        - socials
+      properties:
+        email:
+          type:
+            - array
+            - "null"
+          items:
+            type: string
+            format: email
+
+        socials:
+          type: array
+          items:
+            $ref: "#/components/schemas/ContactSocial"
+
+
+  # ------------------------------------------------------------
+  # VERSION DATA
+  # ------------------------------------------------------------
+
+    VersionData:
+      type: object
+      required:
+        - version
+      properties:
+        version:
+          type: integer
+          minimum: 0
+
+
+  # ------------------------------------------------------------
+  # PORTFOLIO DATA
+  # ------------------------------------------------------------
+
+    ExperienceList:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Experience"
+
+
+    ProjectList:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Project"
+
+
+    SkillsData:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: array
+          items:
+            type: string
+
+
+    PortfolioData:
+      type: object
+      required:
+        - navbar
+        - userData
+        - experience
+        - projects
+        - skills
+        - contact
+      properties:
+
+        navbar:
+          $ref: "#/components/schemas/NavbarInput"
+
+        userData:
+          $ref: "#/components/schemas/UserDataInput"
+
+        experience:
+          $ref: "#/components/schemas/ExperienceList"
+
+        projects:
+          $ref: "#/components/schemas/ProjectList"
+
+        skills:
+          $ref: "#/components/schemas/SkillsData"
+
+        contact:
+          $ref: "#/components/schemas/ContactInput"
+
+
+  # ------------------------------------------------------------
+  # RESPONSE ENVELOPE
+  # ------------------------------------------------------------
+
+    SuccessResponse:
+      type: object
+      required:
+        - status
+        - code
+        - message
+      properties:
+        status:
+          type: string
+          enum:
+            - SUCCESS
+
+        code:
+          type: integer
+          const: 200
+
+        message:
+          type: string
+
+
+    CreatedResponse:
+      type: object
+      required:
+        - status
+        - code
+        - message
+      properties:
+        status:
+          type: string
+          enum:
+            - SUCCESS
+
+        code:
+          type: integer
+          const: 201
+
+        message:
+          type: string
+
+
+    FailureResponse:
+      type: object
+      required:
+        - status
+        - code
+        - message
+      properties:
+        status:
+          type: string
+          enum:
+            - FAILURE
+
+        code:
+          type: integer
+          enum:
+            - 400
+            - 401
+            - 403
+            - 404
+            - 409
+            - 500
+
+        message:
+          type: string
+
+
+  # ------------------------------------------------------------
+  # VERSION RESPONSE
+  # ------------------------------------------------------------
+
+    VersionResponse:
+      allOf:
+        - $ref: "#/components/schemas/SuccessResponse"
+        - type: object
+          required:
+            - data
+          properties:
+            data:
+              $ref: "#/components/schemas/VersionData"
+
+
+  # ------------------------------------------------------------
+  # PORTFOLIO RESPONSE
+  # ------------------------------------------------------------
+
+    PortfolioResponse:
+      allOf:
+        - $ref: "#/components/schemas/SuccessResponse"
+        - type: object
+          required:
+            - data
+          properties:
+            data:
+              $ref: "#/components/schemas/PortfolioData"
+
+
+  # ------------------------------------------------------------
+  # EXPERIENCE RESPONSES
+  # ------------------------------------------------------------
+
+    ExperienceResponse:
+      allOf:
+        - $ref: "#/components/schemas/SuccessResponse"
+        - type: object
+          required:
+            - data
+          properties:
+            data:
+              $ref: "#/components/schemas/Experience"
+
+
+    ExperienceListResponse:
+      allOf:
+        - $ref: "#/components/schemas/SuccessResponse"
+        - type: object
+          required:
+            - data
+          properties:
+            data:
+              $ref: "#/components/schemas/ExperienceList"
+
+
+  # ------------------------------------------------------------
+  # PROJECT RESPONSES
+  # ------------------------------------------------------------
+
+    ProjectResponse:
+      allOf:
+        - $ref: "#/components/schemas/SuccessResponse"
+        - type: object
+          required:
+            - data
+          properties:
+            data:
+              $ref: "#/components/schemas/Project"
+
+
+    ProjectListResponse:
+      allOf:
+        - $ref: "#/components/schemas/SuccessResponse"
+        - type: object
+          required:
+            - data
+          properties:
+            data:
+              $ref: "#/components/schemas/ProjectList"
+
+
+  # ------------------------------------------------------------
+  # SKILLS RESPONSE
+  # ------------------------------------------------------------
+
+    SkillsResponse:
+      allOf:
+        - $ref: "#/components/schemas/SuccessResponse"
+        - type: object
+          required:
+            - data
+          properties:
+            data:
+              $ref: "#/components/schemas/SkillsInput"
+
+
+  # ------------------------------------------------------------
+  # USER DATA RESPONSE
+  # ------------------------------------------------------------
+
+    UserDataResponse:
+      allOf:
+        - $ref: "#/components/schemas/SuccessResponse"
+        - type: object
+          required:
+            - data
+          properties:
+            data:
+              $ref: "#/components/schemas/UserDataInput"
+
+
+  # ------------------------------------------------------------
+  # CONTACT RESPONSE
+  # ------------------------------------------------------------
+
+    ContactResponse:
+      allOf:
+        - $ref: "#/components/schemas/SuccessResponse"
+        - type: object
+          required:
+            - data
+          properties:
+            data:
+              $ref: "#/components/schemas/ContactInput"
+
+
+  # ------------------------------------------------------------
+  # NAVBAR RESPONSE
+  # ------------------------------------------------------------
+
+    NavbarResponse:
+      allOf:
+        - $ref: "#/components/schemas/SuccessResponse"
+        - type: object
+          required:
+            - data
+          properties:
+            data:
+              $ref: "#/components/schemas/NavbarInput"
+
+
+# ==============================================================
+# COMMON RESPONSES
+# ==============================================================
+
+  responses:
+
+    BadRequest:
+      description: Invalid request data
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/FailureResponse"
+          example:
+            status: FAILURE
+            code: 400
+            message: Invalid request data
+
+
+    Unauthorized:
+      description: |
+        Unauthorized request.
+
+        For public APIs, this indicates that the request did not originate
+        through an authorized CDN path or failed origin-access validation.
+
+        For admin APIs, this indicates that the administrative bearer token
+        is missing or invalid.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/FailureResponse"
+          example:
+            status: FAILURE
+            code: 401
+            message: Unauthorized
+
+
+    Forbidden:
+      description: |
+        The request was authenticated but is not authorized to perform
+        the requested administrative operation.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/FailureResponse"
+          example:
+            status: FAILURE
+            code: 403
+            message: Forbidden
+
+
+    NotFound:
+      description: Requested resource was not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/FailureResponse"
+          example:
+            status: FAILURE
+            code: 404
+            message: Resource not found
+
+
+    Conflict:
+      description: Resource already exists or conflicts with current state
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/FailureResponse"
+          example:
+            status: FAILURE
+            code: 409
+            message: Resource already exists
+
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/FailureResponse"
+          example:
+            status: FAILURE
+            code: 500
+            message: Internal server error
+
+
+    DeleteSuccess:
+      description: Resource deleted successfully
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: "#/components/schemas/SuccessResponse"
+          example:
+            status: SUCCESS
+            code: 200
+            message: Resource deleted successfully
