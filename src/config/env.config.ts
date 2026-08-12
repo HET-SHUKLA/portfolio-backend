@@ -1,6 +1,11 @@
 import { z } from "zod";
 
 const envSchema = z.object({
+    NODE_ENV: z
+    .enum(["development", "production"]),
+
+    PORT: z.coerce.number().default(3000),
+
     DB_URL: z.string({
         error: "DB_URL is required in the environment variables"
     }),
