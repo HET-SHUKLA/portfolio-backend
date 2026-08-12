@@ -18,7 +18,7 @@
     "doc": "docs"
   },
   "scripts": {
-    "dev": "node server.ts",
+    "dev": "node --env-file=.env server.ts",
     "typecheck": "tsc --noEmit",
     "sam:build": "sam build",
     "sam:deploy": "sam deploy"
@@ -28,7 +28,8 @@
     "@tursodatabase/database": "^0.7.2",
     "drizzle-orm": "^1.0.0-rc.4",
     "esbuild": "^0.28.1",
-    "fastify": "^5.11.2"
+    "fastify": "^5.11.2",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.162",
