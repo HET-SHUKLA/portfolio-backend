@@ -31,6 +31,8 @@ paths:
       tags:
         - Public
       summary: Get current portfolio version
+      operationId: getVersion
+
       description: |
         Returns the current portfolio content version.
 
@@ -39,8 +41,6 @@ paths:
         the complete portfolio from /portfolio.
 
         This endpoint is intended to be cached by the CDN.
-
-      operationId: getVersion
 
       responses:
         "200":
@@ -68,13 +68,13 @@ paths:
       tags:
         - Public
       summary: Get complete portfolio
+      operationId: getPortfolio
+
       description: |
         Returns the complete public portfolio snapshot.
 
         The frontend should request this endpoint only when its locally
         embedded portfolio version differs from the backend version.
-
-      operationId: getPortfolio
 
       responses:
         "200":
@@ -232,6 +232,28 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/NavbarResponse"
+
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+
+  /customData:
+    get:
+      tags:
+        - Public
+      summary: Get home page custom data
+      operationId: getCustomData
+
+      responses:
+        "200":
+          description: Home page custom data retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CustomDataResponse"
 
         "401":
           $ref: "#/components/responses/Unauthorized"
@@ -890,6 +912,114 @@ paths:
           $ref: "#/components/responses/InternalServerError"
 
 
+  # ============================================================
+  # ADMIN - CUSTOM DATA
+  # ============================================================
+
+  /admin/customData:
+    post:
+      tags:
+        - Admin
+      summary: Create home page custom data
+      operationId: createCustomData
+      security:
+        - AdminBearerAuth: []
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CustomDataInput"
+
+      responses:
+        "201":
+          description: Custom data created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CustomDataResponse"
+
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+        "409":
+          $ref: "#/components/responses/Conflict"
+
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+
+    patch:
+      tags:
+        - Admin
+      summary: Update home page custom data
+      operationId: updateCustomData
+      security:
+        - AdminBearerAuth: []
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CustomDataInput"
+
+      responses:
+        "200":
+          description: Custom data updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CustomDataResponse"
+
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+
+    delete:
+      tags:
+        - Admin
+      summary: Delete home page custom data
+      operationId: deleteCustomData
+      security:
+        - AdminBearerAuth: []
+
+      responses:
+        "200":
+          $ref: "#/components/responses/DeleteSuccess"
+
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+
 # ==============================================================
 # COMPONENTS
 # ==============================================================
@@ -931,21 +1061,10 @@ components:
 
 
   # ------------------------------------------------------------
-  # COMMON ENUMS
+  # NAVBAR
   # ------------------------------------------------------------
 
   schemas:
-
-    Status:
-      type: string
-      enum:
-        - SUCCESS
-        - FAILURE
-
-
-  # ------------------------------------------------------------
-  # NAVBAR
-  # ------------------------------------------------------------
 
     NavbarItem:
       type: object
@@ -955,6 +1074,7 @@ components:
       properties:
         title:
           type: string
+
         link:
           type: string
 
@@ -1158,14 +1278,9 @@ components:
   # ------------------------------------------------------------
 
     SkillsInput:
-      type: object
-      required:
-        - data
-      properties:
-        data:
-          type: array
-          items:
-            type: string
+      type: array
+      items:
+        type: string
 
 
   # ------------------------------------------------------------
@@ -1206,7 +1321,17 @@ components:
 
 
   # ------------------------------------------------------------
-  # VERSION DATA
+  # CUSTOM DATA
+  # ------------------------------------------------------------
+
+    CustomDataInput:
+      type: array
+      items:
+        type: string
+
+
+  # ------------------------------------------------------------
+  # VERSION
   # ------------------------------------------------------------
 
     VersionData:
@@ -1223,39 +1348,6 @@ components:
   # PORTFOLIO DATA
   # ------------------------------------------------------------
 
-    ExperienceList:
-      type: object
-      required:
-        - data
-      properties:
-        data:
-          type: array
-          items:
-            $ref: "#/components/schemas/Experience"
-
-
-    ProjectList:
-      type: object
-      required:
-        - data
-      properties:
-        data:
-          type: array
-          items:
-            $ref: "#/components/schemas/Project"
-
-
-    SkillsData:
-      type: object
-      required:
-        - data
-      properties:
-        data:
-          type: array
-          items:
-            type: string
-
-
     PortfolioData:
       type: object
       required:
@@ -1265,6 +1357,7 @@ components:
         - projects
         - skills
         - contact
+        - customData
       properties:
 
         navbar:
@@ -1274,20 +1367,31 @@ components:
           $ref: "#/components/schemas/UserDataInput"
 
         experience:
-          $ref: "#/components/schemas/ExperienceList"
+          type: array
+          items:
+            $ref: "#/components/schemas/Experience"
 
         projects:
-          $ref: "#/components/schemas/ProjectList"
+          type: array
+          items:
+            $ref: "#/components/schemas/Project"
 
         skills:
-          $ref: "#/components/schemas/SkillsData"
+          type: array
+          items:
+            type: string
 
         contact:
           $ref: "#/components/schemas/ContactInput"
 
+        customData:
+          type: array
+          items:
+            type: string
+
 
   # ------------------------------------------------------------
-  # RESPONSE ENVELOPE
+  # COMMON RESPONSE BASE
   # ------------------------------------------------------------
 
     SuccessResponse:
@@ -1357,7 +1461,7 @@ components:
 
 
   # ------------------------------------------------------------
-  # VERSION RESPONSE
+  # RESPONSE SCHEMAS
   # ------------------------------------------------------------
 
     VersionResponse:
@@ -1371,10 +1475,6 @@ components:
               $ref: "#/components/schemas/VersionData"
 
 
-  # ------------------------------------------------------------
-  # PORTFOLIO RESPONSE
-  # ------------------------------------------------------------
-
     PortfolioResponse:
       allOf:
         - $ref: "#/components/schemas/SuccessResponse"
@@ -1385,10 +1485,6 @@ components:
             data:
               $ref: "#/components/schemas/PortfolioData"
 
-
-  # ------------------------------------------------------------
-  # EXPERIENCE RESPONSES
-  # ------------------------------------------------------------
 
     ExperienceResponse:
       allOf:
@@ -1409,12 +1505,10 @@ components:
             - data
           properties:
             data:
-              $ref: "#/components/schemas/ExperienceList"
+              type: array
+              items:
+                $ref: "#/components/schemas/Experience"
 
-
-  # ------------------------------------------------------------
-  # PROJECT RESPONSES
-  # ------------------------------------------------------------
 
     ProjectResponse:
       allOf:
@@ -1435,12 +1529,10 @@ components:
             - data
           properties:
             data:
-              $ref: "#/components/schemas/ProjectList"
+              type: array
+              items:
+                $ref: "#/components/schemas/Project"
 
-
-  # ------------------------------------------------------------
-  # SKILLS RESPONSE
-  # ------------------------------------------------------------
 
     SkillsResponse:
       allOf:
@@ -1453,10 +1545,6 @@ components:
               $ref: "#/components/schemas/SkillsInput"
 
 
-  # ------------------------------------------------------------
-  # USER DATA RESPONSE
-  # ------------------------------------------------------------
-
     UserDataResponse:
       allOf:
         - $ref: "#/components/schemas/SuccessResponse"
@@ -1467,10 +1555,6 @@ components:
             data:
               $ref: "#/components/schemas/UserDataInput"
 
-
-  # ------------------------------------------------------------
-  # CONTACT RESPONSE
-  # ------------------------------------------------------------
 
     ContactResponse:
       allOf:
@@ -1483,10 +1567,6 @@ components:
               $ref: "#/components/schemas/ContactInput"
 
 
-  # ------------------------------------------------------------
-  # NAVBAR RESPONSE
-  # ------------------------------------------------------------
-
     NavbarResponse:
       allOf:
         - $ref: "#/components/schemas/SuccessResponse"
@@ -1496,6 +1576,17 @@ components:
           properties:
             data:
               $ref: "#/components/schemas/NavbarInput"
+
+
+    CustomDataResponse:
+      allOf:
+        - $ref: "#/components/schemas/SuccessResponse"
+        - type: object
+          required:
+            - data
+          properties:
+            data:
+              $ref: "#/components/schemas/CustomDataInput"
 
 
 # ==============================================================
@@ -1590,8 +1681,7 @@ components:
       content:
         application/json:
           schema:
-            allOf:
-              - $ref: "#/components/schemas/SuccessResponse"
+            $ref: "#/components/schemas/SuccessResponse"
           example:
             status: SUCCESS
             code: 200
