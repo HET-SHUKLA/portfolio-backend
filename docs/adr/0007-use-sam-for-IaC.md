@@ -1,4 +1,4 @@
-# for IaC
+# Use SAM for IaC
 
 ## Status
 Decided
